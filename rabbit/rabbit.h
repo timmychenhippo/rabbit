@@ -43,8 +43,8 @@ public:
 	~Rabbit();
 	uint32_t NextState(uint32_t c[8], uint32_t x[8], uint32_t carry);
 	void initBlock();
-	void setKey(const Ktools* tools);
-	void setIV(const Ktools* tools);
+	void setKey(const Ktools* tool);
+	void setIV(const Ktools* tool);
 	void encrypt(uint8_t* output, const uint8_t* input, uint32_t len);
 	void decrypt(uint8_t* output, const uint8_t* input, uint32_t len);
 };

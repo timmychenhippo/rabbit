@@ -43,7 +43,7 @@ static inline uint32_t u8t32le(const uint8_t p[4]) {
 static inline void PutWord(uint8_t* block, uint32_t value)
 {
     uint32_t T = value;
-    memcpy(block, &T, sizeof(uint8_t));
+    memcpy(block, &T, sizeof(uint32_t));
 }
 static inline void xorbuf(uint8_t* buf, const uint8_t* mask, uint32_t count)
 {
@@ -223,28 +223,70 @@ void Rabbit::encrypt(uint8_t* output, const uint8_t* input, uint32_t len)
 {
     initBlock();
 
-    uint8_t* out = output;
-    uint32_t length = len/16 ;
+    uint8_t temp[16];
+    memset(temp, 0, 16);
+    //uint32_t* output32 = new uint32_t [len];
+    //memcpy(output32, output, len);
+
+    //uint32_t length = len/16 ;
     //uint32_t j = 0;
-     for (uint32_t i = 0; i < length ; i++)
+     for (uint32_t i = 0; i < len ; i+=16)
     {
         /* Iterate the system */
         m_wcy = NextState(m_wc, m_wx, m_wcy);
        
         /*Encrypt/decrypt 16 bytes of data */
-        PutWord(out + 0, m_wx[0] ^ (m_wx[5] >> 16) ^ (m_wx[3] << 16));
-        PutWord(out + 4, m_wx[2] ^ (m_wx[7] >> 16) ^ (m_wx[5] << 16));
-        PutWord(out + 8, m_wx[4] ^ (m_wx[1] >> 16) ^ (m_wx[7] << 16));
-        PutWord(out + 12, m_wx[6] ^ (m_wx[3] >> 16) ^ (m_wx[1] << 16));
-        out += 16;
+        PutWord(temp + 0, m_wx[0] ^ (m_wx[5] >> 16) ^ (m_wx[3] << 16));
+        PutWord(temp + 4, m_wx[2] ^ (m_wx[7] >> 16) ^ (m_wx[5] << 16));
+        PutWord(temp + 8, m_wx[4] ^ (m_wx[1] >> 16) ^ (m_wx[7] << 16));
+        PutWord(temp + 12, m_wx[6] ^ (m_wx[3] >> 16) ^ (m_wx[1] << 16));
+        //out += 16;
+        for (uint32_t posn = i; posn < i + 16; posn++)
+        {
+            if (posn >= len)
+            {
+                break;
+            }
+            output[posn] = input[posn] ^ temp[posn - i];
+        }
+        memset(temp, 0, 16);
     }
 
     /*XOR of the input with the keystream*/
 
-   xorbuf(output, input, len);
+   //xorbuf(output, input, len);
+   //delete[] output32;
 
 }
 void Rabbit::decrypt(uint8_t* output, const uint8_t* input, uint32_t len)
 {
     encrypt(output, input, len);
 }
+
+
+
+//void Rabbit::encrypt(uint8_t* output, const uint8_t* input, uint32_t len)
+//{
+//    initBlock();
+//
+//    uint8_t* out = output;
+//    uint32_t length = len / 16;
+//    //uint32_t j = 0;
+//    for (uint32_t i = 0; i < length; i++)
+//    {
+//        /* Iterate the system */
+//        m_wcy = NextState(m_wc, m_wx, m_wcy);
+//
+//        /*Encrypt/decrypt 16 bytes of data */
+//        PutWord(out + 0, m_wx[0] ^ (m_wx[5] >> 16) ^ (m_wx[3] << 16));
+//        PutWord(out + 4, m_wx[2] ^ (m_wx[7] >> 16) ^ (m_wx[5] << 16));
+//        PutWord(out + 8, m_wx[4] ^ (m_wx[1] >> 16) ^ (m_wx[7] << 16));
+//        PutWord(out + 12, m_wx[6] ^ (m_wx[3] >> 16) ^ (m_wx[1] << 16));
+//        out += 16;
+//    }
+//
+//    /*XOR of the input with the keystream*/
+//
+//    xorbuf(output, input, len);
+//
+//}
